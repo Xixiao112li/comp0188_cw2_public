@@ -99,7 +99,7 @@ class ValidateSingleEpoch:
 
                 mae += torch.sum(torch.abs(output["pos"] - output_vals["pos"]).cpu())
                 _, predicted = torch.max(output["grp"], 1)
-                correct += (predicted == output_vals["grp"]).sum().cpu()
+                correct += (predicted == torch.argmax(output_vals["grp"], dim=1)).sum().cpu()
                 total += output_vals["grp"].size(0)
                 
                 if self.cache_preds:
