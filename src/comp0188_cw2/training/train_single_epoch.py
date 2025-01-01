@@ -118,7 +118,7 @@ class TrainSingleEpoch:
             total += output_vals["grp"].size(0)
             # f1
             all_preds.append(predicted.cpu())
-            all_labels.append(true_label.cpu())
+            all_labels.append(torch.argmax(output_vals["grp"], dim=1).cpu())
             losses += train_loss.detach().cpu()
             denom += 1
             # losses.update(train_loss.data[0], g.size(0))
