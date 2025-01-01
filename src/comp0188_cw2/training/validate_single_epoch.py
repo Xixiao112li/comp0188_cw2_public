@@ -51,6 +51,9 @@ class ValidateSingleEpoch:
 
         losses = torch.tensor(0.0)
         denom = torch.tensor(0)
+        mae = torch.tensor(0.0)
+        correct = torch.tensor(0.0)
+        total = torch.tensor(0)
         if gpu:
             _device = "cuda"
         else:
@@ -93,6 +96,12 @@ class ValidateSingleEpoch:
                 val_loss = criterion(output, output_vals)
                 losses += val_loss.detach().cpu()
                 denom += 1
+
+                mae += torch.sum(torch.abs(output["pos"] - output_vals["pos"]).cpu())
+                _, predicted = torch.max(output["grp"], 1)
+                correct += (predicted == output_vals["grp"]).sum().cpu()
+                total += output_vals["grp"].size(0)
+                
                 if self.cache_preds:
                     preds.append({k:output[k].detach().cpu() for k in output.keys()})
         _prd_lst = {}
@@ -100,4 +109,6 @@ class ValidateSingleEpoch:
             for k in preds[0].keys():
                 _prd_lst[k] = torch.concat([t[k] for t in preds],dim=0)
         losses = losses/denom
-        return losses, _prd_lst
+        mae = mae / total
+        accuracy = correct.float() / total
+        return {"loss": losses, "mae": mae, "accuracy": accuracy}, _prd_lst
