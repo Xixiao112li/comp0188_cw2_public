@@ -105,7 +105,7 @@ class ValidateSingleEpoch:
                 correct += (predicted == torch.argmax(output_vals["grp"], dim=1)).sum().cpu()
                 total += output_vals["grp"].size(0)
                 all_preds.append(predicted.cpu())
-                all_labels.append(true_label.cpu())
+                all_labels.append(torch.argmax(output_vals["grp"], dim=1).cpu())
                 
                 if self.cache_preds:
                     preds.append({k:output[k].detach().cpu() for k in output.keys()})
