@@ -96,6 +96,8 @@ def train(
     mo.add_metric(nm="epoch_train_accuracy", rll_trans={})
     mo.add_metric(nm="epoch_val_mae", rll_trans={})
     mo.add_metric(nm="epoch_val_accuracy", rll_trans={})
+    mo.add_metric(nm="epoch_train_f1", rll_trans={})
+    mo.add_metric(nm="epoch_val_f1", rll_trans={}) 
     
     logger.info("Running epochs: {}".format(epochs))
     # Add model to cuda device
@@ -115,10 +117,11 @@ def train(
         epoch_train_loss = train_metrics["loss"].numpy()
         epoch_train_mae = train_metrics["mae"].detach().numpy()
         epoch_train_accuracy = train_metrics["accuracy"].detach().numpy()
+        epoch_train_f1 = train_metrics["f1"].detach().numpy()
 
         #logger.info("epoch {}\t training loss : {}".format(
         #        epoch, epoch_train_loss))
-        logger.info(f"Epoch {epoch} - Training Loss: {epoch_train_loss}, MAE: {epoch_train_mae}, Accuracy: {epoch_train_accuracy}")
+        logger.info(f"Epoch {epoch} - Training Loss: {epoch_train_loss}, MAE: {epoch_train_mae}, Accuracy: {epoch_train_accuracy} F1: {epoch_train_f1}")
       
         val_metrics, val_preds = val_epoch_func(
             model=model, data_loader=val_data_loader, gpu=gpu,
@@ -128,10 +131,12 @@ def train(
         epoch_val_loss = val_metrics["loss"].numpy()
         epoch_val_mae = val_metrics["mae"].detach().numpy()
         epoch_val_accuracy = val_metrics["accuracy"].detach().numpy()
+        epoch_val_f1 = val_metrics["f1"].detach().numpy()
+      
         logger.info("Running validation")
         #logger.info("epoch {}\t validation loss : {} ".format(
         #        epoch, epoch_val_loss))
-        logger.info(f"Epoch {epoch} - Validation Loss: {epoch_val_loss}, MAE: {epoch_val_mae}, Accuracy: {epoch_val_accuracy}")
+        logger.info(f"Epoch {epoch} - Validation Loss: {epoch_val_loss}, MAE: {epoch_val_mae}, Accuracy: {epoch_val_accuracy} F1: {epoch_val_f1}")
 
         #mo.update_metrics(metric_value_dict={
         #    "epoch_train_loss":{"label":"epoch_{}".format(epoch),
@@ -143,9 +148,11 @@ def train(
             "epoch_train_loss": {"label": f"epoch_{epoch}", "value": epoch_train_loss},
             "epoch_train_mae": {"label": f"epoch_{epoch}", "value": epoch_train_mae},
             "epoch_train_accuracy": {"label": f"epoch_{epoch}", "value": epoch_train_accuracy},
+            "epoch_train_f1": {"label": f"epoch_{epoch}", "value": epoch_train_f1},
             "epoch_val_loss": {"label": f"epoch_{epoch}", "value": epoch_val_loss},
             "epoch_val_mae": {"label": f"epoch_{epoch}", "value": epoch_val_mae},
             "epoch_val_accuracy": {"label": f"epoch_{epoch}", "value": epoch_val_accuracy},
+            "epoch_val_f1": {"label": f"epoch_{epoch}", "value": epoch_val_f1},
         })
 
         if scheduler:
