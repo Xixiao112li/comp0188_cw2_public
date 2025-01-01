@@ -9,6 +9,7 @@ torch.autograd.set_detect_anomaly(True)
 from pymlrf.types import (
     GenericDataLoaderProtocol
     )
+from sklearn.metrics import f1_score
 
 class TrainSingleEpoch:
     
@@ -73,6 +74,8 @@ class TrainSingleEpoch:
         model.train()
         
         preds = []
+        all_preds = []
+        all_labels = []
         range_gen = tqdm(
             enumerate(data_loader),
             total=len(data_loader)
@@ -113,7 +116,9 @@ class TrainSingleEpoch:
             _, predicted = torch.max(output["grp"], 1)
             correct += (predicted == torch.argmax(output_vals["grp"], dim=1)).sum().cpu()
             total += output_vals["grp"].size(0)
-            
+            # f1
+            all_preds.append(predicted.cpu())
+            all_labels.append(true_label.cpu())
             losses += train_loss.detach().cpu()
             denom += 1
             # losses.update(train_loss.data[0], g.size(0))
@@ -134,4 +139,7 @@ class TrainSingleEpoch:
         losses = losses/denom
         mae = mae / total
         accuracy = correct / total
-        return {"loss": losses, "mae": mae, "accuracy": accuracy}, _prd_lst
+        all_preds = torch.cat(all_preds, dim=0)
+        all_labels = torch.cat(all_labels, dim=0)
+        f1 = f1_score(all_labels.numpy(), all_preds.numpy(), average='macro')
+        return {"loss": losses, "mae": mae, "accuracy": accuracy, "f1": torch.tensor(f1)}, _prd_lst
