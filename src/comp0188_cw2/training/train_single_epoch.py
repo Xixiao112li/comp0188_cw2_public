@@ -59,6 +59,9 @@ class TrainSingleEpoch:
         """
         losses = torch.tensor(0.0)
         denom = torch.tensor(0)
+        mae = torch.tensor(0.0)
+        correct = torch.tensor(0.0)
+        total = torch.tensor(0)
         if gpu:
             _device = "cuda"
         else:
@@ -103,6 +106,14 @@ class TrainSingleEpoch:
                 train_loss = criterion(output, output_vals)
             if self.cache_preds:
                 preds.append({k:output[k].detach().cpu() for k in output.keys()})
+                
+            # MAE (reg. only)
+            mae += torch.sum(torch.abs(output["pos"] - output_vals["pos"]).cpu())
+            # Accuracy（clas. only）
+            _, predicted = torch.max(output["grp"], 1)
+            correct += (predicted == output_vals["grp"]).sum().cpu()
+            total += output_vals["grp"].size(0)
+            
             losses += train_loss.detach().cpu()
             denom += 1
             # losses.update(train_loss.data[0], g.size(0))
@@ -121,4 +132,6 @@ class TrainSingleEpoch:
             for k in preds[0].keys():
                 _prd_lst[k] = torch.concat([t[k] for t in preds],dim=0)
         losses = losses/denom
-        return losses, _prd_lst
+        mae = mae / total
+        accuracy = correct / total
+        return {"loss": losses, "mae": mae, "accuracy": accuracy}, _prd_lst
