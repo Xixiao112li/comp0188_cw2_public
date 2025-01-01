@@ -113,8 +113,8 @@ def train(
             optimizer=optimizer, criterion=criterion,logger=logger)
         #epoch_train_loss = train_loss_val.numpy()
         epoch_train_loss = train_metrics["loss"].numpy()
-        epoch_train_mae = train_metrics["mae"].numpy()
-        epoch_train_accuracy = train_metrics["accuracy"].numpy()
+        epoch_train_mae = train_metrics["mae"].detach().numpy()
+        epoch_train_accuracy = train_metrics["accuracy"].detach().numpy()
 
         #logger.info("epoch {}\t training loss : {}".format(
         #        epoch, epoch_train_loss))
@@ -126,8 +126,8 @@ def train(
 
         #epoch_val_loss = val_loss_val.numpy()
         epoch_val_loss = val_metrics["loss"].numpy()
-        epoch_val_mae = val_metrics["mae"].numpy()
-        epoch_val_accuracy = val_metrics["accuracy"].numpy()
+        epoch_val_mae = val_metrics["mae"].detach().numpy()
+        epoch_val_accuracy = val_metrics["accuracy"].detach().numpy()
         logger.info("Running validation")
         #logger.info("epoch {}\t validation loss : {} ".format(
         #        epoch, epoch_val_loss))
