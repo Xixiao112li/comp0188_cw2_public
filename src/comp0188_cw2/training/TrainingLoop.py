@@ -92,6 +92,10 @@ def train(
         nm="epoch_val_loss",
         rll_trans={}
         )
+    mo.add_metric(nm="epoch_train_mae", rll_trans={})
+    mo.add_metric(nm="epoch_train_accuracy", rll_trans={})
+    mo.add_metric(nm="epoch_val_mae", rll_trans={})
+    mo.add_metric(nm="epoch_val_accuracy", rll_trans={})
     
     logger.info("Running epochs: {}".format(epochs))
     # Add model to cuda device
@@ -104,27 +108,44 @@ def train(
 
     for epoch in np.arange(1,epochs+1):
         logger.info("Running training epoch")
-        train_loss_val, train_preds =  train_epoch_func(
+        train_metrics, train_preds =  train_epoch_func(
             model=model, data_loader=train_data_loader, gpu=gpu,
             optimizer=optimizer, criterion=criterion,logger=logger)
-        epoch_train_loss = train_loss_val.numpy()
+        #epoch_train_loss = train_loss_val.numpy()
+        epoch_train_loss = train_metrics["loss"].numpy()
+        epoch_train_mae = train_metrics["mae"].numpy()
+        epoch_train_accuracy = train_metrics["accuracy"].numpy()
 
-        logger.info("epoch {}\t training loss : {}".format(
-                epoch, epoch_train_loss))
-        val_loss_val, val_preds = val_epoch_func(
+        #logger.info("epoch {}\t training loss : {}".format(
+        #        epoch, epoch_train_loss))
+        logger.info(f"Epoch {epoch} - Training Loss: {epoch_train_loss}, MAE: {epoch_train_mae}, Accuracy: {epoch_train_accuracy}")
+      
+        val_metrics, val_preds = val_epoch_func(
             model=model, data_loader=val_data_loader, gpu=gpu,
             criterion=val_criterion)
 
-        epoch_val_loss = val_loss_val.numpy()
+        #epoch_val_loss = val_loss_val.numpy()
+        epoch_val_loss = val_metrics["loss"].numpy()
+        epoch_val_mae = val_metrics["mae"].numpy()
+        epoch_val_accuracy = val_metrics["accuracy"].numpy()
         logger.info("Running validation")
-        logger.info("epoch {}\t validation loss : {} ".format(
-                epoch, epoch_val_loss))
+        #logger.info("epoch {}\t validation loss : {} ".format(
+        #        epoch, epoch_val_loss))
+        logger.info(f"Epoch {epoch} - Validation Loss: {epoch_val_loss}, MAE: {epoch_val_mae}, Accuracy: {epoch_val_accuracy}")
 
+        #mo.update_metrics(metric_value_dict={
+        #    "epoch_train_loss":{"label":"epoch_{}".format(epoch),
+        #                        "value":epoch_train_loss},
+        #    "epoch_val_loss":{"label":"epoch_{}".format(epoch),
+        #                    "value":epoch_val_loss}
+        #})
         mo.update_metrics(metric_value_dict={
-            "epoch_train_loss":{"label":"epoch_{}".format(epoch),
-                                "value":epoch_train_loss},
-            "epoch_val_loss":{"label":"epoch_{}".format(epoch),
-                            "value":epoch_val_loss}
+            "epoch_train_loss": {"label": f"epoch_{epoch}", "value": epoch_train_loss},
+            "epoch_train_mae": {"label": f"epoch_{epoch}", "value": epoch_train_mae},
+            "epoch_train_accuracy": {"label": f"epoch_{epoch}", "value": epoch_train_accuracy},
+            "epoch_val_loss": {"label": f"epoch_{epoch}", "value": epoch_val_loss},
+            "epoch_val_mae": {"label": f"epoch_{epoch}", "value": epoch_val_mae},
+            "epoch_val_accuracy": {"label": f"epoch_{epoch}", "value": epoch_val_accuracy},
         })
 
         if scheduler:
