@@ -7,6 +7,7 @@ torch.autograd.set_detect_anomaly(True)
 from pymlrf.types import (
     GenericDataLoaderProtocol
     )
+from sklearn.metrics import f1_score
 
 class ValidateSingleEpoch:
     
@@ -64,6 +65,8 @@ class ValidateSingleEpoch:
             denom = denom.half()
         model.eval()
         preds = []
+        all_preds = []
+        all_labels = []
         with torch.no_grad():
             for i, vals in enumerate(data_loader):
 
@@ -101,6 +104,8 @@ class ValidateSingleEpoch:
                 _, predicted = torch.max(output["grp"], 1)
                 correct += (predicted == torch.argmax(output_vals["grp"], dim=1)).sum().cpu()
                 total += output_vals["grp"].size(0)
+                all_preds.append(predicted.cpu())
+                all_labels.append(true_label.cpu())
                 
                 if self.cache_preds:
                     preds.append({k:output[k].detach().cpu() for k in output.keys()})
@@ -110,5 +115,8 @@ class ValidateSingleEpoch:
                 _prd_lst[k] = torch.concat([t[k] for t in preds],dim=0)
         losses = losses/denom
         mae = mae / total
-        accuracy = correct.float() / total
-        return {"loss": losses, "mae": mae, "accuracy": accuracy}, _prd_lst
+        accuracy = correct / total
+        all_preds = torch.cat(all_preds, dim=0)
+        all_labels = torch.cat(all_labels, dim=0)
+        f1 = f1_score(all_labels.numpy(), all_preds.numpy(), average='macro')
+        return {"loss": losses, "mae": mae, "accuracy": accuracy, "f1": torch.tensor(f1)}, _prd_lst
